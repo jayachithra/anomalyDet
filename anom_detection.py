@@ -286,22 +286,12 @@ if __name__ == "__main__":
                      fit601, p602])   
 
     print 'done reading'
-    '''x_mean = data;
-    des = 'normal_data.csv'
-    ch_dfa = open(des,'w')
+    
+    pca = decomposition.PCA(n_components=15) #  for dim red
+    X = pca.fit_transform(np.array(data))
 
-    sentence = []
-    for i in range(len(x_mean)):
-        for j in range(len(x_mean[i])):
-            sentence.append(str(x_mean[i][j]))
-        sentence.append(str(y[i]))
-        ch_dfa.write(' '.join(sentence))
-        ch_dfa.write('\n')
-        sentence=[]
-        ch_dfa.flush()   
 
-    pca = decomposition.PCA() # n_components=3 for dim red
-    X = pca.fit_transform(np.array(data))'''
+
     #x_train, x_test = train_test_split(X, test_size = 0.2)#test_size:
     #clf = svm.OneClassSVM(nu=0.1, kernel="rbf", gamma=0.1)
     #clf.fit(x_train)
