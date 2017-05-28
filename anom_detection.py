@@ -65,6 +65,74 @@ def string_to_timestamp(date_string):#convert time string to float value
     time_stamp = time.strptime(date_string, '%d/%m/%Y %H:%M:%S %p')
     return time.mktime(time_stamp)
 
+def ParseData(filename):
+    ah = open(filename, 'r')
+    data = []#contains features
+    y = []#contains labels
+    
+    ah.readline()#skip first line
+    for line_ah in ah:
+
+        timestamp = string_to_timestamp(line_ah.strip().split(',')[0])# date
+        fit101 = float(line_ah.strip().split(',')[1])
+        lit101 = float(line_ah.strip().split(',')[2])
+        mv101 = float(line_ah.strip().split(',')[3])
+        p101 = float(line_ah.strip().split(',')[4] )
+        
+        ait201 = float(line_ah.strip().split(',')[6])
+        ait202 = float(line_ah.strip().split(',')[7])
+        ait203 = float(line_ah.strip().split(',')[8])
+        fit201 = float(line_ah.strip().split(',')[9])
+        mv201 = float(line_ah.strip().split(',')[10])
+        p203 = float(line_ah.strip().split(',')[13])
+        p205 = float(line_ah.strip().split(',')[15])
+   
+        dpit301 = float(line_ah.strip().split(',')[17])
+        fit301 = float(line_ah.strip().split(',')[18])
+        lit301 = float(line_ah.strip().split(',')[19])
+        mv301 = float(line_ah.strip().split(',')[20])
+        mv302 = float(line_ah.strip().split(',')[21])
+        mv303 = float(line_ah.strip().split(',')[22])
+        mv304 = float(line_ah.strip().split(',')[23])
+        p301 = float(line_ah.strip().split(',')[24])
+        p302 = float(line_ah.strip().split(',')[25])
+        
+        ait401 = float(line_ah.strip().split(',')[26])
+        ait402 = float(line_ah.strip().split(',')[27])
+        fit401 = float(line_ah.strip().split(',')[28])
+        lit401 = float(line_ah.strip().split(',')[29])
+
+        ait501 = float(line_ah.strip().split(',')[35])
+        ait502 = float(line_ah.strip().split(',')[36])
+        ait503 = float(line_ah.strip().split(',')[37])
+        ait504 = float(line_ah.strip().split(',')[38])
+        fit501 = float(line_ah.strip().split(',')[39])
+        fit502 = float(line_ah.strip().split(',')[40])
+        fit503 = float(line_ah.strip().split(',')[41])
+        fit504 = float(line_ah.strip().split(',')[42])
+        pit501 = float(line_ah.strip().split(',')[45])
+        pit502 = float(line_ah.strip().split(',')[46])
+        pit503 = float(line_ah.strip().split(',')[47])
+
+        fit601 = float(line_ah.strip().split(',')[48])
+        p602 = float(line_ah.strip().split(',')[50])
+        
+
+        if line_ah.strip().split(',')[52] == 'Attack':
+            label = 1#label fraud
+        else:
+            label = 0#label save
+        
+        
+        #FEATURE SELECTION
+        data.append([fit101, lit101, mv101, p101,
+                     ait201, ait202, ait203, fit201, mv201, p203, p205, 
+                     dpit301, fit301, lit301, mv301, mv302, mv303, mv304, p301, p302,
+                     ait401, ait402, fit401, lit401,
+                     ait501, ait502, ait503, ait504, fit501, fit502, fit503, fit504, pit501, pit502, pit503,
+                     fit601, p602]) 
+    return data
+
 # Training the classifier and K-Fold cross-validation
 def TrainClassifier(clf, sm, usx, usy, cutoff):
 	total_frauds = 0
@@ -216,83 +284,19 @@ if __name__ == "__main__":
     correlation_matrix(DataFrame(data=p1), p1_labels, 'all_normalized.png')'''
     #############################################################
 
-    
-    ah = open(src, 'r')
-    X = []#contains features
-    y = []#contains labels
-    data = []
-    color = []
-    
-    ah.readline()#skip first line
-    for line_ah in ah:
-
-        timestamp = string_to_timestamp(line_ah.strip().split(',')[0])# date
-        fit101 = float(line_ah.strip().split(',')[1])
-        lit101 = float(line_ah.strip().split(',')[2])
-        mv101 = float(line_ah.strip().split(',')[3])
-        p101 = float(line_ah.strip().split(',')[4] )
-        
-        ait201 = float(line_ah.strip().split(',')[6])
-        ait202 = float(line_ah.strip().split(',')[7])
-        ait203 = float(line_ah.strip().split(',')[8])
-        fit201 = float(line_ah.strip().split(',')[9])
-        mv201 = float(line_ah.strip().split(',')[10])
-        p203 = float(line_ah.strip().split(',')[13])
-        p205 = float(line_ah.strip().split(',')[15])
-   
-        dpit301 = float(line_ah.strip().split(',')[17])
-        fit301 = float(line_ah.strip().split(',')[18])
-        lit301 = float(line_ah.strip().split(',')[19])
-        mv301 = float(line_ah.strip().split(',')[20])
-        mv302 = float(line_ah.strip().split(',')[21])
-        mv303 = float(line_ah.strip().split(',')[22])
-        mv304 = float(line_ah.strip().split(',')[23])
-        p301 = float(line_ah.strip().split(',')[24])
-        p302 = float(line_ah.strip().split(',')[25])
-        
-        ait401 = float(line_ah.strip().split(',')[26])
-        ait402 = float(line_ah.strip().split(',')[27])
-        fit401 = float(line_ah.strip().split(',')[28])
-        lit401 = float(line_ah.strip().split(',')[29])
-
-        ait501 = float(line_ah.strip().split(',')[35])
-        ait502 = float(line_ah.strip().split(',')[36])
-        ait503 = float(line_ah.strip().split(',')[37])
-        ait504 = float(line_ah.strip().split(',')[38])
-        fit501 = float(line_ah.strip().split(',')[39])
-        fit502 = float(line_ah.strip().split(',')[40])
-        fit503 = float(line_ah.strip().split(',')[41])
-        fit504 = float(line_ah.strip().split(',')[42])
-        pit501 = float(line_ah.strip().split(',')[45])
-        pit502 = float(line_ah.strip().split(',')[46])
-        pit503 = float(line_ah.strip().split(',')[47])
-
-        fit601 = float(line_ah.strip().split(',')[48])
-        p602 = float(line_ah.strip().split(',')[50])
-        
-
-        if line_ah.strip().split(',')[52] == 'Attack':
-            label = 1#label fraud
-        else:
-            label = 0#label save
-        
-        
-        #FEATURE SELECTION
-        data.append([fit101, lit101, mv101, p101,
-                     ait201, ait202, ait203, fit201, mv201, p203, p205, 
-                     dpit301, fit301, lit301, mv301, mv302, mv303, mv304, p301, p302,
-                     ait401, ait402, fit401, lit401,
-                     ait501, ait502, ait503, ait504, fit501, fit502, fit503, fit504, pit501, pit502, pit503,
-                     fit601, p602])   
+    trainingData = ParseData(src)
+    testData = ParseData(testFile)
+      
 
     print 'done reading'
     
     pca = decomposition.PCA(n_components=15) #  for dim red
-    X = pca.fit_transform(np.array(data))
+    x_train = pca.fit_transform(np.array(trainingData))
+    x_test = pca.fit_transform(np.array(testData))
 
 
 
-    #x_train, x_test = train_test_split(X, test_size = 0.2)#test_size:
+    #x_train, x_test = train_test_split(X, test_size = 0.2)#test_size: 20%
     #clf = svm.OneClassSVM(nu=0.1, kernel="rbf", gamma=0.1)
     #clf.fit(x_train)
     #y_pred_train = clf.predict(x_train)
