@@ -33,7 +33,7 @@ def correlation_matrix(df, labels, filename):
 
 
     fig = plt.figure(figsize=(20, 10))
-    ax1 = fig.add_subplot(111)
+    '''ax1 = fig.add_subplot(111)
     cmap = cm.get_cmap('jet', 100)
     cax = ax1.imshow(df.corr(), interpolation="nearest", cmap=cmap)
     ax1.grid(True)
@@ -51,7 +51,9 @@ def correlation_matrix(df, labels, filename):
     # Add colorbar, make sure to specify tick locations to match desired ticklabels
     fig.colorbar(cax, ticks=[-1, -0.5, 0,0.5,.75,.8,.9,.95,1])
     plt.savefig(filename)
-    plt.show()
+    plt.show()'''
+    df.plot(kind='box', title=filename)
+    #plt.savefig('normed_'+filename)
 
 def normalize(maxmin, x):
        maxi = maxmin.max()
@@ -199,55 +201,55 @@ if __name__ == "__main__":
     testFile = 'normalize_attack.csv'
 
     ####################### Correlation ################################
-    test = read_csv(testFile)    
+    test = read_csv(src)    
     df = read_csv(src)
-    '''
-    test.FIT101 = normalize(df.FIT101, test.FIT101)
-    test.LIT101 = normalize(df.LIT101, test.LIT101)
-    test.MV101 = normalize(df.MV101, test.MV101)
-    test.P101 =  normalize(df.P101, test.P101)
+    
+    df.FIT101 = normalize(df.FIT101, test.FIT101)
+    df.LIT101 = normalize(df.LIT101, test.LIT101)
+    df.MV101 = normalize(df.MV101, test.MV101)
+    df.P101 =  normalize(df.P101, test.P101)
 
-    test.AIT201 = normalize(df.AIT201, test.AIT201)
-    test.AIT202 = normalize(df.AIT202, test.AIT202)
-    test.AIT203 = normalize(df.AIT203, test.AIT203)
-    test.FIT201 =  normalize(df.FIT201, test.FIT201)
-    test.MV201 =  normalize(df.MV201, test.MV201)
-    test.P203 =  normalize(df.P203, test.P203)
-    test.P205 =  normalize(df.P205, test.P205)
+    df.AIT201 = normalize(df.AIT201, test.AIT201)
+    df.AIT202 = normalize(df.AIT202, test.AIT202)
+    df.AIT203 = normalize(df.AIT203, test.AIT203)
+    df.FIT201 =  normalize(df.FIT201, test.FIT201)
+    df.MV201 =  normalize(df.MV201, test.MV201)
+    df.P203 =  normalize(df.P203, test.P203)
+    df.P205 =  normalize(df.P205, test.P205)
 
-    test.DPIT301 = normalize(df.DPIT301, test.DPIT301)
-    test.FIT301 = normalize(df.FIT301, test.FIT301)
-    test.LIT301 = normalize(df.LIT301, test.LIT301)
-    test.MV301 =  normalize(df.MV301, test.MV301)
-    test.MV302 =  normalize(df.MV302, test.MV302)
-    test.MV303 =  normalize(df.MV303, test.MV303)
-    test.MV304 =  normalize(df.MV304, test.MV304)
-    test.P301 =  normalize(df.P301, test.P301)
-    test.P302 =  normalize(df.P302, test.P302)
+    df.DPIT301 = normalize(df.DPIT301, test.DPIT301)
+    df.FIT301 = normalize(df.FIT301, test.FIT301)
+    df.LIT301 = normalize(df.LIT301, test.LIT301)
+    df.MV301 =  normalize(df.MV301, test.MV301)
+    df.MV302 =  normalize(df.MV302, test.MV302)
+    df.MV303 =  normalize(df.MV303, test.MV303)
+    df.MV304 =  normalize(df.MV304, test.MV304)
+    df.P301 =  normalize(df.P301, test.P301)
+    df.P302 =  normalize(df.P302, test.P302)
 
-    test.AIT401 =  normalize(df.AIT401, test.AIT401)
-    test.AIT402 =  normalize(df.AIT402, test.AIT402)
-    test.FIT401 =  normalize(df.FIT401, test.FIT401)
-    test.LIT401 =  normalize(df.LIT401, test.LIT401)
+    df.AIT401 =  normalize(df.AIT401, test.AIT401)
+    df.AIT402 =  normalize(df.AIT402, test.AIT402)
+    df.FIT401 =  normalize(df.FIT401, test.FIT401)
+    df.LIT401 =  normalize(df.LIT401, test.LIT401)
 
-    test.AIT501 = normalize(df.AIT501, test.AIT501)
-    test.AIT502 = normalize(df.AIT502, test.AIT502)
-    test.AIT503 = normalize(df.AIT503, test.AIT503)
-    test.AIT504 =  normalize(df.AIT504, test.AIT504)
-    test.FIT501 =  normalize(df.FIT501, test.FIT501)
-    test.FIT502 =  normalize(df.FIT502, test.FIT502)
-    test.FIT503 =  normalize(df.FIT503, test.FIT503)
-    test.FIT504 =  normalize(df.FIT504, test.FIT504)
-    test.PIT501 =  normalize(df.PIT501, test.PIT501)
-    test.PIT502 =  normalize(df.PIT502, test.PIT502)
-    test.PIT503 =  normalize(df.PIT503, test.PIT503)
+    df.AIT501 = normalize(df.AIT501, test.AIT501)
+    df.AIT502 = normalize(df.AIT502, test.AIT502)
+    df.AIT503 = normalize(df.AIT503, test.AIT503)
+    df.AIT504 =  normalize(df.AIT504, test.AIT504)
+    df.FIT501 =  normalize(df.FIT501, test.FIT501)
+    df.FIT502 =  normalize(df.FIT502, test.FIT502)
+    df.FIT503 =  normalize(df.FIT503, test.FIT503)
+    df.FIT504 =  normalize(df.FIT504, test.FIT504)
+    df.PIT501 =  normalize(df.PIT501, test.PIT501)
+    df.PIT502 =  normalize(df.PIT502, test.PIT502)
+    df.PIT503 =  normalize(df.PIT503, test.PIT503)
 
-    test.FIT601 =  normalize(df.FIT601, test.FIT601)
-    test.P602 =  normalize(df.P602, test.P602)
+    df.FIT601 =  normalize(df.FIT601, test.FIT601)
+    df.P602 =  normalize(df.P602, test.P602)
 
-    test.to_csv('normalize_attack.csv', sep=',')'''
+    #test.to_csv('normalize_attack.csv', sep=',')
 
-    '''
+    
     p1 = {'FIT101': df.FIT101, 'LIT101': df.LIT101, 'MV101': df.MV101, 'P101': df.P101}
     p1_labels = ['FIT101', 'LIT101', 'MV101', 'P101']
     p2 = {'AIT201': df.AIT201, 'AIT202': df.AIT202, 'AIT203': df.AIT203, 'FIT201' :df.FIT201, 'MV201': df.MV201, 'P203' :df.P203, 'P205' : df.P205}
@@ -269,7 +271,7 @@ if __name__ == "__main__":
     correlation_matrix(DataFrame(data=p5), p5_labels, 'p5.png')
     correlation_matrix(DataFrame(data=p6), p6_labels, 'p6.png')
 
-    features = p1
+    '''features = p1
     features.update(p2)
     features.update(p3)
     features.update(p4)
