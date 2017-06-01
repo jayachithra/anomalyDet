@@ -309,63 +309,33 @@ if __name__ == "__main__":
     DataFrame(abnormal).plot(kind='line')
     
 
-    '''predicted = []
-    for i in residuals:
-        if(np.count_nonzero((i>0.8) | (i<-0.7))>0):
-           predicted.append(True)
-        else:
-           predicted.append(False)
-    predicted= np.array(predicted)
-    TP, TN, FP, FN  =0,0,0,0
+    predicted = ((normal > 20) | (abnormal>7))
+    TP, TN, FP, FN  =0.0,0.0,0.0,0.0
+    normals, attacks = 0.0,0.0
     for i in xrange(0, len(predicted)):
-	    if ((df['Normal/Attack'][i]=='Normal') and (predicted[i]==False)):
-		TN+=1
-	    if ((df['Normal/Attack'][i]=='Normal') and (predicted[i]==True)):
-		FP+=1
-	    if ((df['Normal/Attack'][i]=='Attack') and (predicted[i]==True)):
-		TP+=1
-	    if ((df['Normal/Attack'][i]=='Attack') and (predicted[i]==False)):
-		FN+=1
+        if ((test['Normal/Attack'][i]=='Normal') and (predicted[i]==False)):
+		   TN+=1
+        if ((test['Normal/Attack'][i]=='Normal') and (predicted[i]==True)):
+		   FP+=1
+        if ((test['Normal/Attack'][i]=='Attack') and (predicted[i]==True)):
+		   TP+=1
+        if ((test['Normal/Attack'][i]=='Attack') and (predicted[i]==False)):
+		   FN+=1
+        if(test['Normal/Attack'][i]=='Attack'):
+          attacks+=1
+        if(test['Normal/Attack'][i]=='Normal'):
+          normals+=1
     print "True positives: "+ str(TP)
     print "False positives: "+ str(FP)
     print "True Negatives: "+ str(TN)
-    print "False Negatives: "+ str(FN)'''
+    print "False Negatives: "+ str(FN)
+    print "normals: "+ str(normals)
+    print "attacks: "+ str(attacks)
+    precision = TP/(TP+FP)
+    recall =TP/ (TP+FN)
+    f1 = 2*precision*recall/(precision+recall)
+    print f1
 
-
-'''
-
-
-    # latest try
-train,test = alldata[0:742975], alldata[742976:928718]
-normaltest = train[:,0]**2 +train[:,1]**2 +train[:,2]**2 +train[:,3]**2 +train[:,4]**2 + train[:,5]**2 
-abnormaltest = train[:,6]**2 +train[:,7]**2 +train[:,8]**2 +train[:,9]**2
-DataFrame(normaltest).plot(kind='line')
-DataFrame(abnormaltest).plot(kind='line')
-nt = test[:,0]**2 +test[:,1]**2 +test[:,2]**2 +test[:,3]**2 +test[:,4]**2 + test[:,5]**2 
-at = test[:,6]**2 +test[:,7]**2 +test[:,8]**2 +test[:,9]**2
-
-
-np.count_nonzero(nt>100)
-np.count_nonzero(at>10)
-
-detected = 0
-fp =0
-totalattacks =0
-totalnormal=0
-for i in xrange(742976,928718):
-    if((ntlabels[i-742976] or atlabels[i-742976]) and alllabels[i]=='Attack'):
-          detected+=1
-    elif((ntlabels[i-742976] or atlabels[i-742976]) and alllabels[i]=='Normal'):
-         fp+=1
-    if(alllabels[i]=='Attack'):
-         totalattacks+=1
-    else:
-         totalnormal+=1
-print 'detected: ' + str(detected)
-print 'fp: ' + str(fp)
-print 'attacks: ' + str(totalattacks)
-print 'normals: ' + str(totalnormal)
-'''
 
 ################################################################################3
 
