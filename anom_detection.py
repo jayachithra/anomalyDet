@@ -11,6 +11,7 @@ import time
 import pandas as pd
 from pandas import DataFrame, read_csv
 from sklearn import svm
+import statsmodels.api as api
 from imblearn.over_sampling import SMOTE
 from imblearn.under_sampling import RandomUnderSampler
 from sklearn.preprocessing import OneHotEncoder
@@ -55,11 +56,16 @@ def correlation_matrix(df, labels, filename):
     df.plot(kind='box', title=filename)
     #plt.savefig('normed_'+filename)
 
-def normalize(maxmin, x):
-       maxi = maxmin.max()
-       mini = maxmin.min()
-       normalizedData = []
+def normalize(x, blah):
+       mean = x.mean()
+       centered= []
        for i in x:
+           centered.append(np.float64(x)-np.float64(mean))
+       
+       maxi = centered.max()
+       mini = centered.min()
+       normalizedData = []
+       for i in centered:
            normalizedData.append((float(i)-mini)/(maxi-mini))
        return normalizedData
 
@@ -201,9 +207,9 @@ if __name__ == "__main__":
     testFile = 'normalize_attack.csv'
 
     ####################### Correlation ################################
-    test = read_csv(src)    
-    df = read_csv(src)
-    
+    test = read_csv(testFile)    
+    df = read_csv(src,squeeze=True)
+    '''
     df.FIT101 = normalize(df.FIT101, test.FIT101)
     df.LIT101 = normalize(df.LIT101, test.LIT101)
     df.MV101 = normalize(df.MV101, test.MV101)
@@ -245,12 +251,12 @@ if __name__ == "__main__":
     df.PIT503 =  normalize(df.PIT503, test.PIT503)
 
     df.FIT601 =  normalize(df.FIT601, test.FIT601)
-    df.P602 =  normalize(df.P602, test.P602)
+    df.P602 =  normalize(df.P602, test.P602)'''
 
     #test.to_csv('normalize_attack.csv', sep=',')
 
     
-    p1 = {'FIT101': df.FIT101, 'LIT101': df.LIT101, 'MV101': df.MV101, 'P101': df.P101}
+    '''p1 = {'FIT101': df.FIT101, 'LIT101': df.LIT101, 'MV101': df.MV101, 'P101': df.P101}
     p1_labels = ['FIT101', 'LIT101', 'MV101', 'P101']
     p2 = {'AIT201': df.AIT201, 'AIT202': df.AIT202, 'AIT203': df.AIT203, 'FIT201' :df.FIT201, 'MV201': df.MV201, 'P203' :df.P203, 'P205' : df.P205}
     p2_labels = ['AIT201', 'AIT202', 'AIT203', 'FIT201','MV201', 'P203', 'P205' ]
@@ -269,7 +275,7 @@ if __name__ == "__main__":
     correlation_matrix(DataFrame(data=p3), p3_labels, 'p3.png')
     correlation_matrix(DataFrame(data=p4), p4_labels, 'p4.png')
     correlation_matrix(DataFrame(data=p5), p5_labels, 'p5.png')
-    correlation_matrix(DataFrame(data=p6), p6_labels, 'p6.png')
+    correlation_matrix(DataFrame(data=p6), p6_labels, 'p6.png')'''
 
     '''features = p1
     features.update(p2)
@@ -288,66 +294,86 @@ if __name__ == "__main__":
 
     trainingData = ParseData(src)
     testData = ParseData(testFile)
-      
-
+    
     print 'done reading'
+    ######################   PCA  ######################################
+    pca = decomposition.PCA(n_components=10) #  for dim red
+    x_train = pca.fit(np.array(trainingData))
+    x_test = x_train.transform(testData)
+    normal = x_test[:,0]**2 +x_test[:,1]**2 +x_test[:,2]**2 +x_test[:,3]**2 +x_test[:,4]**2 + x_test[:,5]**2 
+    abnormal = x_test[:,6]**2 +x_test[:,7]**2 +x_test[:,8]**2 +x_test[:,9]**2 
     
-    pca = decomposition.PCA(n_components=15) #  for dim red
-    x_train = pca.fit_transform(np.array(trainingData))
-    x_test = pca.fit_transform(np.array(testData))
-
-
-
-    #x_train, x_test = train_test_split(X, test_size = 0.2)#test_size: 20%
-    #clf = svm.OneClassSVM(nu=0.1, kernel="rbf", gamma=0.1)
-    #clf.fit(x_train)
-    #y_pred_train = clf.predict(x_train)
-    #y_pred_test = clf.predict(x_test)
-
     
-#X = pca.transform(np.array(data))
-# Initialize the two classifiers 
-#clf1 = tree.DecisionTreeClassifier(max_depth=5)
-#clf2 = RandomForestClassifier(n_estimators=25)
-#Initialize SMOTE for the two classifiers
-#sm1 = SMOTE(ratio=0.1)
-#sm2 = SMOTE(ratio=0.35)
+    #DataFrame(residuals[:,12]).plot(kind='line')
+    DataFrame(normal).plot(kind='line')
+    DataFrame(abnormal).plot(kind='line')
+    
 
-# Send paramters to train the two classifiers
-#(y_real_dt, y_pred_dt, y_proba_dt) = TrainClassifier(clf1, sm1, usx, usy, 0.7)
-#(y_real_rf, y_pred_rf, y_proba_rf) = TrainClassifier(clf2, sm2, usx, usy, 0.6)
+    '''predicted = []
+    for i in residuals:
+        if(np.count_nonzero((i>0.8) | (i<-0.7))>0):
+           predicted.append(True)
+        else:
+           predicted.append(False)
+    predicted= np.array(predicted)
+    TP, TN, FP, FN  =0,0,0,0
+    for i in xrange(0, len(predicted)):
+	    if ((df['Normal/Attack'][i]=='Normal') and (predicted[i]==False)):
+		TN+=1
+	    if ((df['Normal/Attack'][i]=='Normal') and (predicted[i]==True)):
+		FP+=1
+	    if ((df['Normal/Attack'][i]=='Attack') and (predicted[i]==True)):
+		TP+=1
+	    if ((df['Normal/Attack'][i]=='Attack') and (predicted[i]==False)):
+		FN+=1
+    print "True positives: "+ str(TP)
+    print "False positives: "+ str(FP)
+    print "True Negatives: "+ str(TN)
+    print "False Negatives: "+ str(FN)'''
 
-#Decision Tree -- Calculate precision, recall and AUC. Plot the results
-#precision_dt, recall_dt, _ = precision_recall_curve(y_real_dt, y_proba_dt)
-#fpr_dt, tpr_dt, _ = roc_curve(y_real_dt, y_proba_dt)
 
-#roc_auc_dt = auc(fpr_dt, tpr_dt)
-#axes[0].plot(fpr_dt, tpr_dt, label=('DT AUC %.2f' % (roc_auc_dt)))
+'''
 
-#f_1_dt = f1_score(y_real_dt, y_pred_dt)
-#print "f-score: " + str(f_1_dt)
-'''labl = "DT F1 %.2f" % (f_1_dt)
-axes[1].plot(recall_dt, precision_dt, label=labl, lw=2)
 
-#Random Forest -- Calculate precision, recall and AUC. Plot the results
-precision_rf, recall_rf, _ = precision_recall_curve(y_real_rf, y_proba_rf)
-fpr_rf, tpr_rf, _ = roc_curve(y_real_rf, y_proba_rf)
+    # latest try
+train,test = alldata[0:742975], alldata[742976:928718]
+normaltest = train[:,0]**2 +train[:,1]**2 +train[:,2]**2 +train[:,3]**2 +train[:,4]**2 + train[:,5]**2 
+abnormaltest = train[:,6]**2 +train[:,7]**2 +train[:,8]**2 +train[:,9]**2
+DataFrame(normaltest).plot(kind='line')
+DataFrame(abnormaltest).plot(kind='line')
+nt = test[:,0]**2 +test[:,1]**2 +test[:,2]**2 +test[:,3]**2 +test[:,4]**2 + test[:,5]**2 
+at = test[:,6]**2 +test[:,7]**2 +test[:,8]**2 +test[:,9]**2
 
-roc_auc_rf = auc(fpr_rf, tpr_rf)
-axes[0].plot(fpr_rf, tpr_rf, label=('RF AUC %.2f' % (roc_auc_rf)))
 
-f_1_rf = f1_score(y_real_rf, y_pred_rf)
-print "f-score: " + str(f_1_rf)
-labl = "RF F1 %.2f" % (f_1_rf)
-axes[1].plot(recall_rf, precision_rf, label=labl, lw=2)
+np.count_nonzero(nt>100)
+np.count_nonzero(at>10)
 
-axes[1].set_xlabel("Recall")
-axes[1].set_ylabel("Precision")
-axes[1].legend(loc='upper right', fontsize='small')
-axes[0].legend(loc='upper right', fontsize='small')
+detected = 0
+fp =0
+totalattacks =0
+totalnormal=0
+for i in xrange(742976,928718):
+    if((ntlabels[i-742976] or atlabels[i-742976]) and alllabels[i]=='Attack'):
+          detected+=1
+    elif((ntlabels[i-742976] or atlabels[i-742976]) and alllabels[i]=='Normal'):
+         fp+=1
+    if(alllabels[i]=='Attack'):
+         totalattacks+=1
+    else:
+         totalnormal+=1
+print 'detected: ' + str(detected)
+print 'fp: ' + str(fp)
+print 'attacks: ' + str(totalattacks)
+print 'normals: ' + str(totalnormal)
+'''
 
-f.tight_layout()
-f.savefig('comparison.png')'''
+################################################################################3
+
+'''dat = DataFrame(data={'timestamp' : pd.to_datetime(df.Timestamp, dayfirst=True), 'FIT101' : df.FIT101})
+dat.set_index("timestamp", inplace=True)
+model = api.tsa.ARMA(dat, (2,0))
+model_fit = model.fit(disp=0)
+print(model_fit.summary())'''
 
 
 
