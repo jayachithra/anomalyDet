@@ -14,6 +14,7 @@ from sklearn import svm
 import statsmodels.api as api
 from imblearn.over_sampling import SMOTE
 from imblearn.under_sampling import RandomUnderSampler
+from statsmodels.tsa.arima_model import _arma_predict_out_of_sample
 from sklearn.preprocessing import OneHotEncoder
 from sklearn.metrics import precision_recall_curve
 from sklearn.metrics import roc_curve, auc, f1_score
@@ -25,10 +26,20 @@ from sklearn.model_selection import KFold
 from sklearn.model_selection import cross_val_score
 from operator import itemgetter
 from itertools import groupby
+import random
 import numpy as np
 from matplotlib import pyplot as plt
 from sklearn import decomposition
 from matplotlib import cm as cm
+
+
+# create a differenced series
+def difference(dataset, interval=1):
+	diff = list()
+	for i in range(interval, len(dataset)):
+		value = dataset[i] - dataset[i - interval]
+		diff.append(value)
+	return np.array(diff)
 
 def correlation_matrix(df, labels, filename):
 
@@ -297,19 +308,20 @@ if __name__ == "__main__":
     
     print 'done reading'
     ######################   PCA  ######################################
-    pca = decomposition.PCA(n_components=10) #  for dim red
+    '''pca = decomposition.PCA(n_components=10) #  for dim red
     x_train = pca.fit(np.array(trainingData))
     x_test = x_train.transform(testData)
     normal = x_test[:,0]**2 +x_test[:,1]**2 +x_test[:,2]**2 +x_test[:,3]**2 +x_test[:,4]**2 + x_test[:,5]**2 
     abnormal = x_test[:,6]**2 +x_test[:,7]**2 +x_test[:,8]**2 +x_test[:,9]**2 
     
     
-    #DataFrame(residuals[:,12]).plot(kind='line')
     DataFrame(normal).plot(kind='line')
     DataFrame(abnormal).plot(kind='line')
     
 
     predicted = ((normal > 20) | (abnormal>7))
+
+    f = open('timestamps.txt', 'w')
     TP, TN, FP, FN  =0.0,0.0,0.0,0.0
     normals, attacks = 0.0,0.0
     for i in xrange(0, len(predicted)):
@@ -319,6 +331,7 @@ if __name__ == "__main__":
 		   FP+=1
         if ((test['Normal/Attack'][i]=='Attack') and (predicted[i]==True)):
 		   TP+=1
+                   print >> f,'\n', test['Timestamp'][i]
         if ((test['Normal/Attack'][i]=='Attack') and (predicted[i]==False)):
 		   FN+=1
         if(test['Normal/Attack'][i]=='Attack'):
@@ -334,16 +347,49 @@ if __name__ == "__main__":
     precision = TP/(TP+FP)
     recall =TP/ (TP+FN)
     f1 = 2*precision*recall/(precision+recall)
-    print f1
+    print f1'''
 
 
-################################################################################3
+    ################################################################################3
 
-'''dat = DataFrame(data={'timestamp' : pd.to_datetime(df.Timestamp, dayfirst=True), 'FIT101' : df.FIT101})
-dat.set_index("timestamp", inplace=True)
-model = api.tsa.ARMA(dat, (2,0))
-model_fit = model.fit(disp=0)
-print(model_fit.summary())'''
+    # random sampling for testing
+    idx = random.sample(xrange(0, len(df.FIT101)),len(df.FIT101)/6)
+    idx.sort()
+    newdata = df.FIT101[idx]
+    newtime = df.Timestamp[idx]
+    DataFrame(newdata).plot()
+
+    dat = DataFrame(data={'timestamp' : pd.to_datetime(df['Timestamp'], dayfirst=True).values, 'FIT101' : df.FIT101})
+    dat_test = DataFrame(data={'timestamp' : pd.to_datetime(test['Timestamp'], dayfirst=True).values, 'FIT101' : test.FIT101})
+    dat.set_index("timestamp", inplace=True)
+    dat_test.set_index("timestamp", inplace=True)
+
+    #res = api.tsa.arma_order_select_ic(dat.values, ic=['aic'], trend='nc') #sadly, my system crashes
+    model = api.tsa.ARMA(dat, (2,0))
+    model_fit = model.fit()
+    model_test = api.tsa.ARMA(dat_test, (2,0))
+    model_test.fit()
+  
+    print(model_fit.aic)
+    prediction = model_test.predict()
+    err = test.FIT101 - prediction.values
+    DataFrame(err).plot()
+    pred = ((err > 0.01) | (err<-0.01))
+    # majority voting based on pred value
+
+
+    '''# get what you need for predicting one-step ahead
+    params = model_fit.params
+    residuals = model_fit.resid
+    p = model_fit.k_ar
+    q = model_fit.k_ma
+    k_exog = model_fit.k_exog
+    k_trend = model_fit.k_trend
+    steps = 1
+
+    output = _arma_predict_out_of_sample(params, steps, residuals, p, q, k_trend, k_exog, endog=test.FIT101, exog=None, start=len(test.FIT101))'''
+    
+
 
 
 
