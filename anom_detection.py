@@ -32,6 +32,30 @@ from matplotlib import pyplot as plt
 from sklearn import decomposition
 from matplotlib import cm as cm
 
+def fit_model(series, order):
+    tr_min = 374401
+    tr_max = 460800
+    te_min, te_max =50401,136800 
+
+    newdata = df[series][tr_min:tr_max]
+    newtime = df.Timestamp[tr_min:tr_max]
+    DataFrame(newdata).plot()
+    testdata = test[series][te_min:te_max]
+    testtime = test.Timestamp[te_min:te_max]
+
+    dat = DataFrame(data={'timestamp' : pd.to_datetime(newtime, dayfirst=True).values, series : newdata})
+    dat.set_index("timestamp", inplace=True)
+    dat_test = DataFrame(data={'timestamp' : pd.to_datetime(testtime, dayfirst=True).values, series : testdata})
+    dat_test.set_index("timestamp", inplace=True)
+
+   
+    model = api.tsa.ARMA(dat, order)
+    model_fit = model.fit(trend='nc', disp=False)
+    model = api.tsa.ARMA(dat_test, order)
+    model_test = model.fit(trend='nc', disp=False)
+
+    print model_fit.summary()
+    return (model_test)
 
 # create a differenced series
 def difference(dataset, interval=1):
@@ -152,66 +176,6 @@ def ParseData(filename):
                      fit601, p602]) 
     return data
 
-# Training the classifier and K-Fold cross-validation
-def TrainClassifier(clf, sm, usx, usy, cutoff):
-	total_frauds = 0
-	non_frauds = 0
-	TP, FP, FN, TN = 0, 0, 0, 0 #Per fold values
-	aTP, aFP, aFN, aTN = 0, 0, 0, 0 #Average values
-	y_real, y_proba, y_pred = [], [], []
-        kf = KFold(n_splits=10, shuffle=True)
-
-        #split the data into train set and test set
-	for train_index, test_index in kf.split(usx):
-
-	    x_train, x_test = usx[train_index], usx[test_index]
-	    y_train, y_test = usy[train_index], usy[test_index]
-
-            # SMOTE
-	    x_train, y_train = sm.fit_sample(x_train, y_train)
-
-            #train the classifier 
-	    clf.fit(x_train, y_train)
-
-
-	    predict_proba = clf.predict_proba(x_test)#the probability of each smple labelled to positive or negative
-	    preds = predict_proba[:,1]
-	    y_predict = (predict_proba[:,1]>cutoff).astype(int) #cutoff as input param
-#Evaluating the classifier
-	    for i in xrange(len(y_predict)):
-		    if y_test[i]==1:
-			total_frauds = total_frauds+1
-		    if y_test[i] == 0:
-			non_frauds = non_frauds+1
-		    if y_test[i]==1 and y_predict[i]==1:
-			TP += 1
-		    if y_test[i]==0 and y_predict[i]==1:
-			FP += 1
-		    if y_test[i]==1 and y_predict[i]==0:
-			FN += 1
-		    if y_test[i]==0 and y_predict[i]==0:
-			TN += 1
-            # collect y_test, preds and y_predict of all folds
-	    y_real.append(y_test)
-	    y_proba.append(preds)
-	    y_pred.append(y_predict)
-
-        # calculate average FP, TP, FN, TN
-	aTP = TP/10
-	aFP = FP/10
-	aFN = FN/10
-	aTN = TN/10
-	print 'Average TP: '+ str(aTP)
-	print 'Average FP: '+ str(aFP)
-	print 'Average FN: '+ str(aFN)
-	print 'Average TN: '+ str(aTN)
-	print 'Average actual frauds: ' + str(total_frauds/10)
-	print 'Average actual legits: ' + str(non_frauds/10)
-	    
-	y_real = np.concatenate(y_real)
-	y_pred = np.concatenate(y_pred)
-	y_proba= np.concatenate(y_proba)
-        return (y_real, y_pred, y_proba)
 
 if __name__ == "__main__":
     src = 'normalize_normal.csv'
@@ -308,20 +272,22 @@ if __name__ == "__main__":
     
     print 'done reading'
     ######################   PCA  ######################################
-    '''pca = decomposition.PCA(n_components=10) #  for dim red
+    '''pca = decomposition.PCA() #  for dim red
     x_train = pca.fit(np.array(trainingData))
     x_test = x_train.transform(testData)
-    normal = x_test[:,0]**2 +x_test[:,1]**2 +x_test[:,2]**2 +x_test[:,3]**2 +x_test[:,4]**2 + x_test[:,5]**2 
-    abnormal = x_test[:,6]**2 +x_test[:,7]**2 +x_test[:,8]**2 +x_test[:,9]**2 
-    
-    
+    normal, abnormal =x_test[:,0]**2, x_test[:,5]**2
+    for i in xrange(1,4):
+        normal += x_test[:,i]**2
+    for i in xrange(6,37):
+        abnormal += x_test[:,i]**2
+      
     DataFrame(normal).plot(kind='line')
     DataFrame(abnormal).plot(kind='line')
     
 
-    predicted = ((normal > 20) | (abnormal>7))
+    predicted = ((normal > 6) | (abnormal>29))
 
-    f = open('timestamps.txt', 'w')
+    #f = open('timestamps.txt', 'w')
     TP, TN, FP, FN  =0.0,0.0,0.0,0.0
     normals, attacks = 0.0,0.0
     for i in xrange(0, len(predicted)):
@@ -331,7 +297,7 @@ if __name__ == "__main__":
 		   FP+=1
         if ((test['Normal/Attack'][i]=='Attack') and (predicted[i]==True)):
 		   TP+=1
-                   print >> f,'\n', test['Timestamp'][i]
+                   #print >> f,'\n', test['Timestamp'][i]
         if ((test['Normal/Attack'][i]=='Attack') and (predicted[i]==False)):
 		   FN+=1
         if(test['Normal/Attack'][i]=='Attack'):
@@ -353,30 +319,32 @@ if __name__ == "__main__":
     ################################################################################3
 
     # random sampling for testing
-    idx = random.sample(xrange(0, len(df.FIT101)),len(df.FIT101)/6)
-    idx.sort()
-    newdata = df.FIT101[idx]
-    newtime = df.Timestamp[idx]
-    DataFrame(newdata).plot()
+    #idx = random.sample(xrange(0, len(df.FIT101)),len(df.FIT101)/6)
+    #idx.sort()
+    tr_min = 374401
+    tr_max = 460800
+    te_min, te_max =50401,136800 
 
-    dat = DataFrame(data={'timestamp' : pd.to_datetime(df['Timestamp'], dayfirst=True).values, 'FIT101' : df.FIT101})
-    dat_test = DataFrame(data={'timestamp' : pd.to_datetime(test['Timestamp'], dayfirst=True).values, 'FIT101' : test.FIT101})
-    dat.set_index("timestamp", inplace=True)
-    dat_test.set_index("timestamp", inplace=True)
+    '''model_FIT101 = fit_model('FIT101', (4,2))
+    model_LIT101 = fit_model('LIT101', (4,2))
+    model_MV101 = fit_model('MV101', (1,0))
 
-    #res = api.tsa.arma_order_select_ic(dat.values, ic=['aic'], trend='nc') #sadly, my system crashes
-    model = api.tsa.ARMA(dat, (2,0))
-    model_fit = model.fit()
-    model_test = api.tsa.ARMA(dat_test, (2,0))
-    model_test.fit()
-  
-    print(model_fit.aic)
-    prediction = model_test.predict()
-    err = test.FIT101 - prediction.values
-    DataFrame(err).plot()
-    pred = ((err > 0.01) | (err<-0.01))
-    # majority voting based on pred value
+    model_AIT201 = fit_model('AIT201', (4,1))
+    model_AIT202 = fit_model('AIT202', (4,2))
+    model_AIT203 = fit_model('AIT203', (4,2))
+    model_FIT201 = fit_model('FIT201', (4,2))
+    model_MV201 = fit_model('MV201', (4,2))
 
+    model_DPIT301 = fit_model('MV201', (4,2))
+    model_FIT301 = fit_model('MV201', (4,2))
+    model_LIT301 = fit_model('MV201', (4,2))
+    model_MV301 = fit_model('MV201', (4,2))
+    model_MV302 = fit_model('MV201', (4,2))
+    model_MV303 = fit_model('MV201', (4,2))
+    model_MV304 = fit_model('MV201', (4,2))
+    model_MV201 = fit_model('MV201', (4,2))'''
+
+    
 
     '''# get what you need for predicting one-step ahead
     params = model_fit.params
